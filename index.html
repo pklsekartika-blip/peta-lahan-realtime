@@ -15,11 +15,11 @@
 
         async function loadPeta() {
             // 1. Ambil Data Atribut dari Google Apps Script (Real-time)
-            const responseAttr = await fetch('URL_WEB_APP_GOOGLE_SCRIPT_ANDA');
+            const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbyKUdeTCmStty-HhoqpsuX1ria7b4bMyxTtRfaDsnL4hb01GX_HoDL3prlu0K_iNvZ0lQ/exec');
             const dataAtribut = await responseAttr.json();
 
             // 2. Ambil Data Geometri (GeoJSON dari SHP Anda)
-            const responseGeo = await fetch('data_lahan.geojson'); 
+            const responseGeo = await fetch('Lahan_Agro.geojson'); 
             const dataGeo = await responseGeo.json();
 
             // 3. Gabungkan Data berdasarkan kolom 'Nama_Lahan'
