@@ -10,8 +10,12 @@
     <div id="map"></div>
 
     <script>
-        var map = L.map('map').setView([-7.123, 112.456], 13); // Sesuaikan lokasi Anda
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        var map = L.map('map', {maxZoom: 22}).setView([-7.129090907160889, 112.72478179813258], 15); // Sesuaikan lokasi Anda
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 22,
+            maxNativeZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(map);
 
         async function loadPeta() {
             // 1. Ambil Data Atribut dari Google Apps Script (Real-time)
@@ -22,17 +26,55 @@
             const responseGeo = await fetch('Lahan_Agro.geojson'); 
             const dataGeo = await responseGeo.json();
 
+            const waktuSekarang = new Date();
             // 3. Gabungkan Data berdasarkan kolom 'Nama_Lahan'
             L.geoJSON(dataGeo, {
-                onEachFeature: function (feature, layer) {
+                style: function (feature) {
                     // Cari data di Google Sheet yang Nama_Lahan-nya cocok
                     const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+                    let statusAktif = false;
+
+                    if (match && match.Selesai) {
+                        // fungsi parsing tanggal DD/MM/YYYY
+                        // Memecah "22/04/2026" menjadi [22, 04, 2026]
+                        const parts = match.Selesai.split('/');
+                        const waktuSelesai = new Date(parts[2], parts[1] - 1, parts[0]);
+
+                        if (waktuSekarang < waktuSelesai) {
+                            statusAktif = true;
+                        }
+                    }
+
+                    return {
+                        fillColor: statusAktif ? "#ff4d4d" : "#2ecc71",
+                        weight: 2,
+                        opacity: 1,
+                        color: 'white',
+                    fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+            
+                    let isExpired = true;
+                    if (match && match.Selesai) {
+                        const parts = match.Selesai.split('/');
+                        const waktuSelesai = new Date(parts[2], parts[1] - 1, parts[0]);
+                        isExpired = waktuSekarang > waktuSelesai;
+                    }        
+                
                     
-                    let popupContent = `<b>Lahan: ${feature.properties.Nama_Lahan}</b>`;
-                    if (match) {
-                        popupContent += `<br>Judul: ${match.Judul}<br>Dosen: ${match.Dosen}<br>Status: ${match.Status}`;
+                    let popupContent = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>`;
+                    if (match && !isExpired) {
+                        popupContent += `
+                            <hr>
+                            <b>Status: TERPAKAI</b><br>
+                            Judul: ${match.Judul}<br>
+                            Dosen: ${match.Dosen}<br>
+                            Selesai pada: ${match.Selesai}`;
                     } else {
-                        popupContent += `<br><i>Belum ada data dari form.</i>`;
+                        popupContent += `<br><b>Status: KOSONG</b><br>
+                                         <small>${isExpired ? "(Peminjaman sebelumnya telah berakhir)" : "Belum ada peminjaman aktif"}</small>`;
                     }
                     layer.bindPopup(popupContent);
                 },
