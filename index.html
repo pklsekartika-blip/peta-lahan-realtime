@@ -7,6 +7,17 @@
     <style> 
         #map { height: 600px; width: 100%; } 
         .info.legend { background: white; padding: 10px; border-radius: 5px; line-height: 24px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+
+        .label-lahan {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: white !important;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000; /* Shadow agar teks putih terbaca jelas */
+            font-size: 12px;
+            pointer-events: none; /* Agar label tidak menghalangi klik ke lahan */
+        }   
     </style>
 </head>
 <body>
@@ -45,6 +56,30 @@
             return isNaN(d.getTime()) ? null : d;
         }
 
+        // Baris 61: LOGIKA WARNA BERDASARKAN ID
+        function getStyleById(feature, dataAtribut, waktuSekarang) {
+            const idLahan = feature.properties.id; // Sesuaikan jika di SHP pakai huruf besar 'ID'
+            const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+            
+            let terpakai = false;
+            if (match && match.Selesai) {
+                const tglSelesai = buatObjekTanggal(match.Selesai);
+                if (tglSelesai && tglSelesai > waktuSekarang) terpakai = true;
+            }
+
+            let warna;
+            switch (idLahan) {
+                case 0: warna = "#808080"; break; // Abu
+                case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break; // Merah/Hijau
+                case 2: warna = "#ffff00"; break; // Kuning
+                case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break; // Merah/Hijau
+                case 4: warna = "#ffc0cb"; break; // Pink
+                case 5: warna = "#0000ff"; break; // Biru
+                default: warna = "#ffffff";
+            }
+            return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
+        }
+        
         async function loadPeta() {
             try {
                 const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbyKUdeTCmStty-HhoqpsuX1ria7b4bMyxTtRfaDsnL4hb01GX_HoDL3prlu0K_iNvZ0lQ/exec');
@@ -57,6 +92,18 @@
 
                 L.geoJSON(dataGeo, {
                     style: function(feature) {
+                        return getStyleByid(feature, dataAtribut, waktuSekarang);
+                    },
+                    onEachFeature: function (feature, layer) {
+                        // 1. Munculkan label nama lahan (Tooltip permanen)
+                        if (feature.properties.Nama_Lahan) {
+                            layer.bindTooltip(feature.properties.Nama_Lahan, {
+                                permanent: true,
+                                direction: "center",
+                                className: "label-lahan"
+                            }).openTooltip();
+                        }
+                        
                         const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
                         let isTerpakai = false;
 
