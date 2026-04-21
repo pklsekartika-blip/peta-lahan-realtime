@@ -4,46 +4,45 @@
     <title>Peta Lahan Realtime</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style> #map { height: 600px; } </style>
+    <style> 
+        #map { height: 600px; width: 100%; } 
+        .info.legend { background: white; padding: 10px; border-radius: 5px; line-height: 24px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+    </style>
 </head>
 <body>
     <div id="map"></div>
 
     <script>
-        var map = L.map('map', {
-            maxZoom: 22
-        }).setView([-7.129090907160889, 112.72478179813258], 17);
+        var map = L.map('map', { maxZoom: 22 }).setView([-7.129090907160889, 112.72478179813258], 17);
 
-        var googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 22,
-            maxNativeZoom: 20,
-            subdomains:['mt0','mt1','mt2','mt3'],
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 22, maxNativeZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
             attribution: '&copy; Google Maps'
         }).addTo(map);
 
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend');
-            div.style.backgroundColor = 'white';
-            div.style.padding = '10px';
-            div.style.borderRadius = '5px';
-            div.style.lineHeight = '20px';
-            div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
             div.innerHTML += '<b>Keterangan:</b><br>';
-            div.innerHTML += '<i style="background: #ff4d4d; width: 15px; height: 15px; display: inline-block; vertical-align: middle;"></i> Terpakai<br>';
-            div.innerHTML += '<i style="background: #2ecc71; width: 15px; height: 15px; display: inline-block; vertical-align: middle;"></i> Kosong';
+            div.innerHTML += '<i style="background: #ff4d4d; width: 15px; height: 15px; display: inline-block; border: 1px solid #000;"></i> Terpakai<br>';
+            div.innerHTML += '<i style="background: #2ecc71; width: 15px; height: 15px; display: inline-block; border: 1px solid #000;"></i> Kosong';
             return div;
         };
         legend.addTo(map);
 
-        // --- FUNGSI PEMBANTU TANGGAL ---
-        function parseTanggal(tglStr) {
-            if (!tglStr) return null;
-            if (typeof tglStr === 'string' && tglStr.includes('/')) {
-                const parts = tglStr.split('/');
-                return new Date(parts[2], parts[1] - 1, parts[0]);
+        // --- FUNGSI PARSING TANGGAL ANTI-ERROR ---
+        function buatObjekTanggal(input) {
+            if (!input) return null;
+            
+            // Jika formatnya teks DD/MM/YYYY (seperti di Sheets kamu)
+            if (typeof input === 'string' && input.includes('/')) {
+                const p = input.split('/');
+                return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
             }
-            return new Date(tglStr);
+            
+            // Jika formatnya ISO (seperti yang muncul di popup foto kamu)
+            const d = new Date(input);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         async function loadPeta() {
@@ -59,48 +58,42 @@
                 L.geoJSON(dataGeo, {
                     style: function(feature) {
                         const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
-                        let statusAktif = false;
+                        let isTerpakai = false;
 
                         if (match && match.Selesai) {
-                            // MENGGUNAKAN PARSETANGGAL AGAR TIDAK ERROR
-                            const waktuSelesai = parseTanggal(match.Selesai);
-                            if (waktuSelesai && waktuSekarang < waktuSelesai) {
-                                statusAktif = true;
+                            const tglSelesai = buatObjekTanggal(match.Selesai);
+                            // Logika: Lahan MERAH jika tanggal selesai masih di masa depan
+                            if (tglSelesai && tglSelesai > waktuSekarang) {
+                                isTerpakai = true;
                             }
                         }
 
                         return {
-                            fillColor: statusAktif ? "#ff4d4d" : "#2ecc71",
-                            weight: 2,
-                            opacity: 1,
-                            color: 'white',
-                            fillOpacity: 0.7
+                            fillColor: isTerpakai ? "#ff4d4d" : "#2ecc71",
+                            weight: 2, opacity: 1, color: 'white', fillOpacity: 0.7
                         };
                     },
                     onEachFeature: function (feature, layer) {
                         const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
-                        const waktuSelesai = match ? parseTanggal(match.Selesai) : null;
-                        const isExpired = waktuSelesai && waktuSekarang > waktuSelesai;
+                        const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
+                        const isAktif = tglSelesai && tglSelesai > waktuSekarang;
                     
-                        let popupContent = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>`;
+                        let content = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>`;
                         
-                        if (match && !isExpired) {
-                            const tglRapi = waktuSelesai.toLocaleDateString('id-ID');
-                            popupContent += `
-                                <hr>
-                                <b>Status: TERPAKAI</b><br>
-                                Judul: ${match.Judul}<br>
-                                Dosen: ${match.Dosen}<br>
-                                Selesai pada: ${tglRapi}`;
+                        if (match && isAktif) {
+                            content += `<hr><b>Status: TERPAKAI</b><br>` +
+                                       `Dosen: ${match.Dosen}<br>` +
+                                       `Judul: ${match.Judul}<br>` +
+                                       `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
                         } else {
-                            popupContent += `<br><b>Status: KOSONG</b><br>
-                                             <small>${match ? "(Masa pinjam berakhir)" : "Belum ada peminjaman"}</small>`;
+                            content += `<br><b>Status: KOSONG</b><br>` +
+                                       `<small>${match ? "(Masa sewa habis)" : "Tersedia"}</small>`;
                         }
-                        layer.bindPopup(popupContent);
+                        layer.bindPopup(content);
                     }
                 }).addTo(map);
             } catch (err) {
-                console.error("Gagal memuat data:", err);
+                console.error("Gagal memuat peta:", err);
             }
         }
 
