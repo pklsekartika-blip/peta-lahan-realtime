@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Peta Lahan Realtime</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style> #map { height: 600px; } </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([-7.123, 112.456], 13); // Sesuaikan lokasi Anda
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        async function loadPeta() {
+            // 1. Ambil Data Atribut dari Google Apps Script (Real-time)
+            const responseAttr = await fetch('URL_WEB_APP_GOOGLE_SCRIPT_ANDA');
+            const dataAtribut = await responseAttr.json();
+
+            // 2. Ambil Data Geometri (GeoJSON dari SHP Anda)
+            const responseGeo = await fetch('data_lahan.geojson'); 
+            const dataGeo = await responseGeo.json();
+
+            // 3. Gabungkan Data berdasarkan kolom 'Nama_Lahan'
+            L.geoJSON(dataGeo, {
+                onEachFeature: function (feature, layer) {
+                    // Cari data di Google Sheet yang Nama_Lahan-nya cocok
+                    const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+                    
+                    let popupContent = `<b>Lahan: ${feature.properties.Nama_Lahan}</b>`;
+                    if (match) {
+                        popupContent += `<br>Judul: ${match.Judul}<br>Dosen: ${match.Dosen}<br>Status: ${match.Status}`;
+                    } else {
+                        popupContent += `<br><i>Belum ada data dari form.</i>`;
+                    }
+                    layer.bindPopup(popupContent);
+                },
+                style: { color: 'green', fillOpacity: 0.5 }
+            }).addTo(map);
+        }
+
+        loadPeta();
+    </script>
+</body>
+</html>
