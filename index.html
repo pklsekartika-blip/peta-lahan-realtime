@@ -5,9 +5,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style> 
+        /* Baris 10: Styling Peta dan Label */
         #map { height: 600px; width: 100%; } 
         .info.legend { background: white; padding: 10px; border-radius: 5px; line-height: 24px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-
+        
         .label-lahan {
             background: transparent !important;
             border: none !important;
@@ -16,8 +17,8 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px #000; /* Shadow agar teks putih terbaca jelas */
             font-size: 12px;
-            pointer-events: none; /* Agar label tidak menghalangi klik ke lahan */
-        }   
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -31,34 +32,34 @@
             attribution: '&copy; Google Maps'
         }).addTo(map);
 
+        // Baris 40: Legenda dengan semua ID
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend');
-            div.innerHTML += '<b>Keterangan:</b><br>';
-            div.innerHTML += '<i style="background: #ff4d4d; width: 15px; height: 15px; display: inline-block; border: 1px solid #000;"></i> Terpakai<br>';
-            div.innerHTML += '<i style="background: #2ecc71; width: 15px; height: 15px; display: inline-block; border: 1px solid #000;"></i> Kosong';
+            div.innerHTML += '<b>Legenda Lahan:</b><br>';
+            div.innerHTML += '<i style="background: #808080; width: 12px; height: 12px; display: inline-block;"></i> ID 0: Abu<br>';
+            div.innerHTML += '<i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Kosong<br>';
+            div.innerHTML += '<i style="background: #ff4d4d; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Terpakai<br>';
+            div.innerHTML += '<i style="background: #ffff00; width: 12px; height: 12px; display: inline-block;"></i> ID 2: Kuning<br>';
+            div.innerHTML += '<i style="background: #ffc0cb; width: 12px; height: 12px; display: inline-block;"></i> ID 4: Pink<br>';
+            div.innerHTML += '<i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> ID 5: Biru';
             return div;
         };
         legend.addTo(map);
 
-        // --- FUNGSI PARSING TANGGAL ANTI-ERROR ---
         function buatObjekTanggal(input) {
             if (!input) return null;
-            
-            // Jika formatnya teks DD/MM/YYYY (seperti di Sheets kamu)
             if (typeof input === 'string' && input.includes('/')) {
                 const p = input.split('/');
                 return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
             }
-            
-            // Jika formatnya ISO (seperti yang muncul di popup foto kamu)
             const d = new Date(input);
             return isNaN(d.getTime()) ? null : d;
         }
 
-        // Baris 61: LOGIKA WARNA BERDASARKAN ID
+        // Baris 65: LOGIKA WARNA BERDASARKAN ID
         function getStyleById(feature, dataAtribut, waktuSekarang) {
-            const idLahan = feature.properties.id; // Sesuaikan jika di SHP pakai huruf besar 'ID'
+            const idLahan = feature.properties.id; 
             const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
             
             let terpakai = false;
@@ -69,12 +70,12 @@
 
             let warna;
             switch (idLahan) {
-                case 0: warna = "#808080"; break; // Abu
-                case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break; // Merah/Hijau
-                case 2: warna = "#ffff00"; break; // Kuning
-                case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break; // Merah/Hijau
-                case 4: warna = "#ffc0cb"; break; // Pink
-                case 5: warna = "#0000ff"; break; // Biru
+                case 0: warna = "#808080"; break;
+                case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+                case 2: warna = "#ffff00"; break;
+                case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+                case 4: warna = "#ffc0cb"; break;
+                case 5: warna = "#0000ff"; break;
                 default: warna = "#ffffff";
             }
             return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
@@ -84,18 +85,17 @@
             try {
                 const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbyKUdeTCmStty-HhoqpsuX1ria7b4bMyxTtRfaDsnL4hb01GX_HoDL3prlu0K_iNvZ0lQ/exec');
                 const dataAtribut = await responseAttr.json();
-
                 const responseGeo = await fetch('Lahan_Agro.geojson'); 
                 const dataGeo = await responseGeo.json();
-
                 const waktuSekarang = new Date();
 
                 L.geoJSON(dataGeo, {
                     style: function(feature) {
+                        // DIPERBAIKI: Menggunakan ID besar (Baris 97)
                         return getStyleById(feature, dataAtribut, waktuSekarang);
                     },
                     onEachFeature: function (feature, layer) {
-                        // 1. Munculkan label nama lahan (Tooltip permanen)
+                        // 1. Munculkan label Nama_Lahan permanen (Baris 101)
                         if (feature.properties.Nama_Lahan) {
                             layer.bindTooltip(feature.properties.Nama_Lahan, {
                                 permanent: true,
@@ -105,36 +105,17 @@
                         }
                         
                         const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
-                        let isTerpakai = false;
-
-                        if (match && match.Selesai) {
-                            const tglSelesai = buatObjekTanggal(match.Selesai);
-                            // Logika: Lahan MERAH jika tanggal selesai masih di masa depan
-                            if (tglSelesai && tglSelesai > waktuSekarang) {
-                                isTerpakai = true;
-                            }
-                        }
-
-                        return {
-                            fillColor: isTerpakai ? "#ff4d4d" : "#2ecc71",
-                            weight: 2, opacity: 1, color: 'white', fillOpacity: 0.7
-                        };
-                    },
-                    onEachFeature: function (feature, layer) {
-                        const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
                         const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
                         const isAktif = tglSelesai && tglSelesai > waktuSekarang;
                     
-                        let content = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>`;
-                        
+                        let content = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>ID: ${feature.properties.id}`;
                         if (match && isAktif) {
                             content += `<hr><b>Status: TERPAKAI</b><br>` +
                                        `Dosen: ${match.Dosen}<br>` +
                                        `Judul: ${match.Judul}<br>` +
                                        `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
                         } else {
-                            content += `<br><b>Status: KOSONG</b><br>` +
-                                       `<small>${match ? "(Masa sewa habis)" : "Tersedia"}</small>`;
+                            content += `<br><b>Status: KOSONG</b>`;
                         }
                         layer.bindPopup(content);
                     }
