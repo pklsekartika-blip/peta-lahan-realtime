@@ -46,6 +46,19 @@
             const dataGeo = await responseGeo.json();
 
             const waktuSekarang = new Date();
+
+            // Fungsi pembantu untuk membaca tanggal dari berbagai format
+            function parseTanggal(tglStr) {
+                if (!tglStr) return null;
+                // jika formatnya DD/MM/YY (ada garis miring)
+                if (typeof tglStr === 'string' && tglStr.includes('/')) {
+                    const parts = tglStr.split('/');
+                    return new Date(parts[2], parts[1] - 1, parts[0];
+                }
+                // jika formatnya ISO
+                return new Date(tglStr);
+            }
+            
             // 3. Gabungkan Data berdasarkan kolom 'Nama_Lahan'
             L.geoJSON(dataGeo, {
                 style: function(feature) {
@@ -81,8 +94,7 @@
                         const waktuSelesai = new Date(parts[2], parts[1] - 1, parts[0]);
                         isExpired = waktuSekarang > waktuSelesai;
                     }        
-                
-                    
+                   
                     let popupContent = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>`;
                     if (match && !isExpired) {
                         popupContent += `
