@@ -109,16 +109,20 @@
                     const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
                 
-                    let content = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
+                    let popupcontent = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
                     if (match && isAktif) {
-                        content += `<hr><b>Status: TERPAKAI</b><br>` +
-                                   `Dosen: ${match.Dosen}<br>` +
-                                   `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
+                        popupcontent += `
+                            <hr>
+                            <b>Status: TERPAKAI</b><br>
+                            Nama: ${match.Nama}<br>
+                            Judul: ${match.Judul}<br>
+                            Dosen: ${match.Dosen}<br>
+                            Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
                     } else {
-                        content += `<br><b>Status: KOSONG</b><br>
+                        popupcontent += `<br><b>Status: KOSONG</b><br>
                                     <small>${match ? "(Peminjaman Sebelumnya telah berakhir)" : "Belum ada peminjaman aktif"}</small>`;
                     }
-                    layer.bindPopup(content);
+                    layer.bindPopup(popupcontent);
                 }
             }).addTo(map);
         } catch (err) {
