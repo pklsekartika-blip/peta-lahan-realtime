@@ -25,107 +25,107 @@
     <div id="map"></div>
 
     <script>
-        var map = L.map('map', { maxZoom: 22 }).setView([-7.129090907160889, 112.72478179813258], 17);
+    var map = L.map('map', { maxZoom: 22 }).setView([-7.129090907160889, 112.72478179813258], 17);
 
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 22, maxNativeZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
-            attribution: '&copy; Google Maps'
-        }).addTo(map);
+    L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 22, maxNativeZoom: 20, subdomains:['mt0','mt1','mt2','mt3'],
+        attribution: '&copy; Google Maps'
+    }).addTo(map);
 
-        // Baris 40: Legenda dengan semua ID
-        var legend = L.control({position: 'bottomright'});
-        legend.onAdd = function (map) {
-            var div = L.DomUtil.create('div', 'info legend');
-            div.innerHTML += '<b>Legenda Lahan:</b><br>';
-            div.innerHTML += '<i style="background: #808080; width: 12px; height: 12px; display: inline-block;"></i> ID 0: Abu<br>';
-            div.innerHTML += '<i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Kosong<br>';
-            div.innerHTML += '<i style="background: #ff4d4d; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Terpakai<br>';
-            div.innerHTML += '<i style="background: #ffff00; width: 12px; height: 12px; display: inline-block;"></i> ID 2: Kuning<br>';
-            div.innerHTML += '<i style="background: #ffc0cb; width: 12px; height: 12px; display: inline-block;"></i> ID 4: Pink<br>';
-            div.innerHTML += '<i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> ID 5: Biru';
-            return div;
-        };
-        legend.addTo(map);
+    // Legenda diperbarui agar informatif
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML += '<b>Legenda Lahan:</b><br>';
+        div.innerHTML += '<i style="background: #808080; width: 12px; height: 12px; display: inline-block;"></i> ID 0: Abu (Umum)<br>';
+        div.innerHTML += '<i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Kosong<br>';
+        div.innerHTML += '<i style="background: #ff4d4d; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Terpakai<br>';
+        div.innerHTML += '<i style="background: #ffff00; width: 12px; height: 12px; display: inline-block;"></i> ID 2: Kuning<br>';
+        div.innerHTML += '<i style="background: #ffc0cb; width: 12px; height: 12px; display: inline-block;"></i> ID 4: Pink<br>';
+        div.innerHTML += '<i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> ID 5: Biru';
+        return div;
+    };
+    legend.addTo(map);
 
-        function buatObjekTanggal(input) {
-            if (!input) return null;
-            if (typeof input === 'string' && input.includes('/')) {
-                const p = input.split('/');
-                return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-            }
-            const d = new Date(input);
-            return isNaN(d.getTime()) ? null : d;
+    function buatObjekTanggal(input) {
+        if (!input) return null;
+        if (typeof input === 'string' && input.includes('/')) {
+            const p = input.split('/');
+            return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
         }
+        const d = new Date(input);
+        return isNaN(d.getTime()) ? null : d;
+    }
 
-        // Baris 65: LOGIKA WARNA BERDASARKAN ID
-        function getStyleById(feature, dataAtribut, waktuSekarang) {
-            const idLahan = feature.properties.id; 
-            const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
-            
-            let terpakai = false;
-            if (match && match.Selesai) {
-                const tglSelesai = buatObjekTanggal(match.Selesai);
-                if (tglSelesai && tglSelesai > waktuSekarang) terpakai = true;
-            }
-
-            let warna;
-            switch (idLahan) {
-                case 0: warna = "#808080"; break;
-                case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-                case 2: warna = "#ffff00"; break;
-                case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-                case 4: warna = "#ffc0cb"; break;
-                case 5: warna = "#0000ff"; break;
-                default: warna = "#ffffff";
-            }
-            return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
-        }
+    function getStyleById(feature, dataAtribut, waktuSekarang) {
+        const idLahan = feature.properties.id; 
+        const namaLahan = feature.properties.Nama_Lahan;
+        const match = dataAtribut.find(item => item.Nama_Lahan === namaLahan);
         
-        async function loadPeta() {
-            try {
-                const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbyKUdeTCmStty-HhoqpsuX1ria7b4bMyxTtRfaDsnL4hb01GX_HoDL3prlu0K_iNvZ0lQ/exec');
-                const dataAtribut = await responseAttr.json();
-                const responseGeo = await fetch('Lahan_Agro.geojson'); 
-                const dataGeo = await responseGeo.json();
-                const waktuSekarang = new Date();
-
-                L.geoJSON(dataGeo, {
-                    style: function(feature) {
-                        // DIPERBAIKI: Menggunakan ID besar (Baris 97)
-                        return getStyleById(feature, dataAtribut, waktuSekarang);
-                    },
-                    onEachFeature: function (feature, layer) {
-                        // 1. Munculkan label Nama_Lahan permanen (Baris 101)
-                        if (feature.properties.Nama_Lahan) {
-                            layer.bindTooltip(feature.properties.Nama_Lahan, {
-                                permanent: true,
-                                direction: "center",
-                                className: "label-lahan"
-                            }).openTooltip();
-                        }
-                        
-                        const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
-                        const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
-                        const isAktif = tglSelesai && tglSelesai > waktuSekarang;
-                    
-                        let content = `<b>Lahan: ${feature.properties.Nama_Lahan}</b><br>ID: ${feature.properties.id}`;
-                        if (match && isAktif) {
-                            content += `<hr><b>Status: TERPAKAI</b><br>` +
-                                       `Dosen: ${match.Dosen}<br>` +
-                                       `Judul: ${match.Judul}<br>` +
-                                       `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
-                        } else {
-                            content += `<br><b>Status: KOSONG</b>`;
-                        }
-                        layer.bindPopup(content);
-                    }
-                }).addTo(map);
-            } catch (err) {
-                console.error("Gagal memuat peta:", err);
-            }
+        let terpakai = false;
+        if (match && match.Selesai) {
+            const tglSelesai = buatObjekTanggal(match.Selesai);
+            if (tglSelesai && tglSelesai > waktuSekarang) terpakai = true;
         }
 
-        loadPeta();
-    </script>
+        let warna;
+        switch (idLahan) {
+            case 0: warna = "#808080"; break;
+            case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+            case 2: warna = "#ffff00"; break;
+            case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+            case 4: warna = "#ffc0cb"; break;
+            case 5: warna = "#0000ff"; break;
+            default: warna = "#ffffff";
+        }
+        return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
+    }
+    
+    async function loadPeta() {
+        try {
+            const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbyKUdeTCmStty-HhoqpsuX1ria7b4bMyxTtRfaDsnL4hb01GX_HoDL3prlu0K_iNvZ0lQ/exec');
+            const dataAtribut = await responseAttr.json();
+            const responseGeo = await fetch('Lahan_Agro.geojson'); 
+            const dataGeo = await responseGeo.json();
+            const waktuSekarang = new Date();
+
+            L.geoJSON(dataGeo, {
+                style: function(feature) {
+                    return getStyleById(feature, dataAtribut, waktuSekarang);
+                },
+                onEachFeature: function (feature, layer) {
+                    // PERBAIKAN LABEL: Jika Nama_Lahan NULL, tampilkan ID
+                    const teksLabel = feature.properties.Nama_Lahan && feature.properties.Nama_Lahan !== "NULL" 
+                                      ? feature.properties.Nama_Lahan 
+                                      : "ID: " + feature.properties.id;
+
+                    layer.bindTooltip(teksLabel, {
+                        permanent: true,
+                        direction: "center",
+                        className: "label-lahan"
+                    }).openTooltip();
+                    
+                    const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+                    const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
+                    const isAktif = tglSelesai && tglSelesai > waktuSekarang;
+                
+                    let content = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
+                    if (match && isAktif) {
+                        content += `<hr><b>Status: TERPAKAI</b><br>` +
+                                   `Dosen: ${match.Dosen}<br>` +
+                                   `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
+                    } else {
+                        content += `<br><b>Status: KOSONG / UMUM</b>`;
+                    }
+                    layer.bindPopup(content);
+                }
+            }).addTo(map);
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    }
+
+    loadPeta();
+</script>
 </body>
 </html>
