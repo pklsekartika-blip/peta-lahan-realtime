@@ -53,7 +53,7 @@
                 // jika formatnya DD/MM/YY (ada garis miring)
                 if (typeof tglStr === 'string' && tglStr.includes('/')) {
                     const parts = tglStr.split('/');
-                    return new Date(parts[2], parts[1] - 1, parts[0];
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
                 }
                 // jika formatnya ISO
                 return new Date(tglStr);
