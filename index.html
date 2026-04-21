@@ -17,11 +17,11 @@
             maxZoom: 22,
             maxNativeZoom: 20,
             subdomains:['mt0','mt1','mt2','mt3'],
-            atribution: "&copy; Google Maps'
+            attribution: '&copy; Google Maps'
         }).addTo(map);
 
         // Baris untuk legenda 
-        var legen = L.control({position: 'bottomright'});
+        var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend');
             div.style.backgroundColor = 'white';
