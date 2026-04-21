@@ -115,7 +115,8 @@
                                    `Dosen: ${match.Dosen}<br>` +
                                    `Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
                     } else {
-                        content += `<br><b>Status: KOSONG / UMUM</b>`;
+                        content += `<br><b>Status: KOSONG</b><br>
+                                    <small>${match ? "(Peminjaman Sebelumnya telah berakhir)" : "Belum ada peminjaman aktif"}</small>`;
                     }
                     layer.bindPopup(content);
                 }
