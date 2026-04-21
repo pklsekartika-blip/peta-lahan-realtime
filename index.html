@@ -92,7 +92,7 @@
 
                 L.geoJSON(dataGeo, {
                     style: function(feature) {
-                        return getStyleByid(feature, dataAtribut, waktuSekarang);
+                        return getStyleById(feature, dataAtribut, waktuSekarang);
                     },
                     onEachFeature: function (feature, layer) {
                         // 1. Munculkan label nama lahan (Tooltip permanen)
