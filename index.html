@@ -82,7 +82,11 @@
         });
         
         let terpakai = false;
-        if (match && match.Selesai) {
+
+        // Pengecekan aman: pastikan match.status_Verifikasi ada isinya, lalu cek apakah isinya verified
+        const isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
+        
+        if (match && match.Selesai && isVerified) {
             const tglSelesai = buatObjekTanggal(match.Selesai);
             if (tglSelesai && tglSelesai > waktuSekarang) terpakai = true;
         }
@@ -136,16 +140,24 @@
                     });
                     const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
-                
+
+                    // cek status verifikasi
+                    const is Verified = matchconst isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
                     let popupcontent = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
-                    if (match && isAktif) {
+                    if (match && isAktif && isVerified) {
                         popupcontent += `
                             <hr>
-                            <b>Status: TERPAKAI</b><br>
+                            <b>Status: TERPAKAI (Verified)</b><br>
                             Nama: ${match.Nama}<br>
                             Judul: ${match.Judul}<br>
                             Dosen: ${match.Dosen}<br>
                             Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
+                    } else if (match && isAktif && !isVerified){
+                        // kondisi 2 : baru isi form, belum verifikasi
+                        popupcontent += `
+                        <hr>
+                        <b style="color:#d35400;">Status: MENUNGGU VERIFIKASI (Pending)</b><br>
+                        <small>Lahan ini sedang diaujkan peminjamannya oleh <b>${match.Nama}</b> dan sedang diproses </small>`;
                     } else {
                         popupcontent += `<br><b>Status: KOSONG</b><br>
                                     <small>${match ? "(Peminjaman Sebelumnya telah berakhir)" : "Belum ada peminjaman aktif"}</small>`;
