@@ -78,7 +78,7 @@
             const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
     
             // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
-            return listLahan.includes(namaLahan || feature.properties.Nama_Lahan);
+            return listLahan.includes(feature.properties.Nama_Lahan);
         });
         
         let terpakai = false;
@@ -132,7 +132,7 @@
                         const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
     
                         // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
-                        return listLahan.includes(namaLahan || feature.properties.Nama_Lahan);
+                        return listLahan.includes(feature.properties.Nama_Lahan);
                     });
                     const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
