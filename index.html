@@ -47,7 +47,6 @@
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'info legend');
         div.innerHTML += '<b>Legenda Lahan:</b><br>';
-        div.innerHTML += '<i style="background: #808080; width: 12px; height: 12px; display: inline-block;"></i> ID 0: Abu (Umum)<br>';
         div.innerHTML += '<i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Kosong<br>';
         div.innerHTML += '<i style="background: #f39c12; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Menunggu Verifikasi<br>';
         div.innerHTML += '<i style="background: #ff4d4d; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Terpakai<br>';
@@ -102,8 +101,7 @@
         }
 
         let warna;
-        if (idLahan === 0) warna = "#808080";
-        else if (idLahan === 2) warna = "#ffffff";
+        if (idLahan === 2) warna = "#ffffff";
         else if (idLahan === 4) warna = "#ffc0cb";
         else if (idLahan === 5) warna = "#0000ff";
         else {
