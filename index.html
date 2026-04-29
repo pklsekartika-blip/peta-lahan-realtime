@@ -142,7 +142,7 @@
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
 
                     // cek status verifikasi
-                    const is Verified = matchconst isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
+                    const isVerified = matchconst isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
                     let popupcontent = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
                     if (match && isAktif && isVerified) {
                         popupcontent += `
