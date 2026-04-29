@@ -84,7 +84,13 @@
         let terpakai = false;
 
         // Pengecekan aman: pastikan match.status_Verifikasi ada isinya, lalu cek apakah isinya verified
-        const isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
+        let isVerified = false;
+        if (match && match.Keterangan) {
+            const ketText = match.Keterangan.toLowerCase(); // Ubah jadi huruf kecil semua
+            if (ketText === "terverisikasi" || ketText === "terverifikasi") { // Cek kedua kemungkinan
+                isVerified = true;
+            }
+        }
         
         if (match && match.Selesai && isVerified) {
             const tglSelesai = buatObjekTanggal(match.Selesai);
@@ -142,12 +148,18 @@
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
 
                     // cek status verifikasi
-                    const isVerified = matchconst isVerified = match && match.Keterangan ? match.Keterangan.toLowerCase() === "Terverifikasi" : false;
+                    let isVerified = false;
+                    if (match && match.Keterangan) {
+                        const ketText = match.Keterangan.toLowerCase();
+                        if (ketText === "terverisikasi" || ketText === "terverifikasi") {
+                            isVerified = true;
+                        }
+                    }
                     let popupcontent = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
                     if (match && isAktif && isVerified) {
                         popupcontent += `
                             <hr>
-                            <b>Status: TERPAKAI (Verified)</b><br>
+                            <b>Status: TERPAKAI (Terverifikasi)</b><br>
                             Nama: ${match.Nama}<br>
                             Judul: ${match.Judul}<br>
                             Dosen: ${match.Dosen}<br>
