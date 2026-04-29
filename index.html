@@ -94,7 +94,7 @@
         }
         
         let statusLahan = "Kosong";
-        if (match && match.Selesai && isVerified) {
+        if (match && match.Selesai) {
             const tglSelesai = buatObjekTanggal(match.Selesai);
             if (tglSelesai && tglSelesai > waktuSekarang) {
                 statusLahan = isVerified ? "terpakai" : "menunggu";
@@ -103,14 +103,14 @@
 
         let warna;
         if (idLahan === 0) warna = "#808080";
-        else if (idLahan === 2) warna = "ffffff";
-        else if (idLahan === 4) warna = "ffc0cb";
-        else if (idLahan === 5) warna = "0000ff";
+        else if (idLahan === 2) warna = "#ffffff";
+        else if (idLahan === 4) warna = "#ffc0cb";
+        else if (idLahan === 5) warna = "#0000ff";
         else {
             // logika warna untuk id 1 dan 3
             if (statusLahan === "terpakai") warna = "#ff4d4d"; // Merah
             else if (statusLahan === "menunggu") warna = "#f39c12"; // oranye
-            else warna = "#2ecc71"; // hijai
+            else warna = "#2ecc71"; // hijau
         }
        // switch (idLahan) {
          //   case 0: warna = "#808080"; break;
