@@ -79,7 +79,7 @@
     
             // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
             return listLahan.includes(namaLahan || feature.properties.Nama_Lahan);
-        });;
+        });
         
         let terpakai = false;
         if (match && match.Selesai) {
