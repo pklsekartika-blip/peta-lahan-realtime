@@ -49,8 +49,9 @@
         div.innerHTML += '<b>Legenda Lahan:</b><br>';
         div.innerHTML += '<i style="background: #808080; width: 12px; height: 12px; display: inline-block;"></i> ID 0: Abu (Umum)<br>';
         div.innerHTML += '<i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Kosong<br>';
+        div.innerHTML += '<i style="background: #f39c12; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Menunggu Verifikasi<br>';
         div.innerHTML += '<i style="background: #ff4d4d; width: 12px; height: 12px; display: inline-block;"></i> ID 1/3: Terpakai<br>';
-        div.innerHTML += '<i style="background: #ffff00; width: 12px; height: 12px; display: inline-block;"></i> ID 2: Melon<br>';
+        div.innerHTML += '<i style="background: #ffffff; width: 12px; height: 12px; display: inline-block;"></i> ID 2: Melon<br>';
         div.innerHTML += '<i style="background: #ffc0cb; width: 12px; height: 12px; display: inline-block;"></i> ID 4: MATAPETA<br>';
         div.innerHTML += '<i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> ID 5: Praktikum';
         return div;
@@ -92,21 +93,34 @@
             }
         }
         
+        let statusLahan = "Kosong";
         if (match && match.Selesai && isVerified) {
             const tglSelesai = buatObjekTanggal(match.Selesai);
-            if (tglSelesai && tglSelesai > waktuSekarang) terpakai = true;
+            if (tglSelesai && tglSelesai > waktuSekarang) {
+                statusLahan = isVerified ? "terpakai" : "menunggu";
+            }
         }
 
         let warna;
-        switch (idLahan) {
-            case 0: warna = "#808080"; break;
-            case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-            case 2: warna = "#ffff00"; break;
-            case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-            case 4: warna = "#ffc0cb"; break;
-            case 5: warna = "#0000ff"; break;
-            default: warna = "#ffffff";
+        if (idLahan === 0) warna = "#808080";
+        else if (idLahan === 2) warna = "ffffff";
+        else if (idLahan === 4) warna = "ffc0cb";
+        else if (idLahan === 5) warna = "0000ff";
+        else {
+            // logika warna untuk id 1 dan 3
+            if (statusLahan === "terpakai") warna = "#ff4d4d"; // Merah
+            else if (statusLahan === "menunggu") warna = "#f39c12"; // oranye
+            else warna = "#2ecc71"; // hijai
         }
+       // switch (idLahan) {
+         //   case 0: warna = "#808080"; break;
+          //  case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+          //  case 2: warna = "#ffff00"; break;
+          //  case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
+          //  case 4: warna = "#ffc0cb"; break;
+          //  case 5: warna = "#0000ff"; break;
+          //  default: warna = "#ffffff";
+       // }
         return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
     }
     
