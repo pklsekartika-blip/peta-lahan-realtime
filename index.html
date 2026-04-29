@@ -70,7 +70,16 @@
     function getStyleById(feature, dataAtribut, waktuSekarang) {
         const idLahan = feature.properties.id; 
         const namaLahan = feature.properties.Nama_Lahan;
-        const match = dataAtribut.find(item => item.Nama_Lahan === namaLahan);
+        const match = [...dataAtribut].reverse().find(item => {
+            // Pastikan sel Nama_Lahan di Sheets tidak kosong
+            if (!item.Nama_Lahan) return false;
+    
+            // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
+            const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
+    
+            // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
+            return listLahan.includes(namaLahan || feature.properties.Nama_Lahan);
+        });;
         
         let terpakai = false;
         if (match && match.Selesai) {
@@ -115,7 +124,16 @@
                         className: "label-lahan"
                     }).openTooltip();
                     
-                    const match = dataAtribut.find(item => item.Nama_Lahan === feature.properties.Nama_Lahan);
+                    const match = [...dataAtribut].reverse().find(item => {
+                        // Pastikan sel Nama_Lahan di Sheets tidak kosong
+                        if (!item.Nama_Lahan) return false;
+    
+                        // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
+                        const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
+    
+                        // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
+                        return listLahan.includes(namaLahan || feature.properties.Nama_Lahan);
+                    });
                     const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
                 
