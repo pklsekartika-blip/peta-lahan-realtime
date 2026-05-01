@@ -72,6 +72,7 @@
         const namaLahan = feature.properties.Nama_Lahan;
         const match = [...dataAtribut].reverse().find(item => {
             // Pastikan sel Kode_Lahan di Sheets tidak kosong
+            if (item.Keterangan && item.Keterangan.toLowerCase() === "ditolak") return false;
             if (!item.Kode_Lahan) return false;
     
             // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
