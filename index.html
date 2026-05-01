@@ -69,16 +69,16 @@
 
     function getStyleById(feature, dataAtribut, waktuSekarang) {
         const idLahan = feature.properties.id; 
-        const namaLahan = feature.properties.Nama_Lahan;
+        const namaLahan = feature.properties.Kode_Lahan;
         const match = [...dataAtribut].reverse().find(item => {
-            // Pastikan sel Nama_Lahan di Sheets tidak kosong
-            if (!item.Nama_Lahan) return false;
+            // Pastikan sel Kode_Lahan di Sheets tidak kosong
+            if (!item.Kode_Lahan) return false;
     
             // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
-            const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
+            const listLahan = item.Kode_Lahan.toString().split(',').map(lahan => lahan.trim());
     
             // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
-            return listLahan.includes(feature.properties.Nama_Lahan);
+            return listLahan.includes(feature.properties.Kode_Lahan);
         });
         
         let terpakai = false;
@@ -93,8 +93,8 @@
         }
         
         let statusLahan = "Kosong";
-        if (match && match.Selesai) {
-            const tglSelesai = buatObjekTanggal(match.Selesai);
+        if (match && match.Selesai_Penelitian) {
+            const tglSelesai = buatObjekTanggal(match.Selesai_Penelitian);
             if (tglSelesai && tglSelesai > waktuSekarang) {
                 statusLahan = isVerified ? "terpakai" : "menunggu";
             }
@@ -135,9 +135,9 @@
                     return getStyleById(feature, dataAtribut, waktuSekarang);
                 },
                 onEachFeature: function (feature, layer) {
-                    // PERBAIKAN LABEL: Jika Nama_Lahan NULL, tampilkan ID
-                    const teksLabel = feature.properties.Nama_Lahan && feature.properties.Nama_Lahan !== "NULL" 
-                                      ? feature.properties.Nama_Lahan 
+                    // PERBAIKAN LABEL: Jika Kode_Lahan NULL, tampilkan ID
+                    const teksLabel = feature.properties.Kode_Lahan && feature.properties.Kode_Lahan !== "NULL" 
+                                      ? feature.properties.Kode_Lahan 
                                       : "ID: " + feature.properties.id;
 
                     layer.bindTooltip(teksLabel, {
@@ -147,16 +147,16 @@
                     }).openTooltip();
                     
                     const match = [...dataAtribut].reverse().find(item => {
-                        // Pastikan sel Nama_Lahan di Sheets tidak kosong
-                        if (!item.Nama_Lahan) return false;
+                        // Pastikan sel Kode_Lahan di Sheets tidak kosong
+                        if (!item.Kode_Lahan) return false;
     
                         // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
-                        const listLahan = item.Nama_Lahan.toString().split(',').map(lahan => lahan.trim());
+                        const listLahan = item.Kode_Lahan.toString().split(',').map(lahan => lahan.trim());
     
                         // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
-                        return listLahan.includes(feature.properties.Nama_Lahan);
+                        return listLahan.includes(feature.properties.Kode_Lahan);
                     });
-                    const tglSelesai = match ? buatObjekTanggal(match.Selesai) : null;
+                    const tglSelesai = match ? buatObjekTanggal(match.Selesai_Penelitian) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
 
                     // cek status verifikasi
@@ -167,14 +167,14 @@
                             isVerified = true;
                         }
                     }
-                    let popupcontent = `<b>Lahan: ${feature.properties.Nama_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
+                    let popupcontent = `<b>Lahan: ${feature.properties.Kode_Lahan || "Tanpa Nama"}</b><br>ID: ${feature.properties.id}`;
                     if (match && isAktif && isVerified) {
                         popupcontent += `
                             <hr>
                             <b>Status: TERPAKAI (Terverifikasi)</b><br>
                             Nama: ${match.Nama}<br>
-                            Judul: ${match.Judul}<br>
-                            Dosen: ${match.Dosen}<br>
+                            Judul: ${match.Judul_Penelitian}<br>
+                            Dosen: ${match.Dosen_Pembimbing}<br>
                             Selesai: ${tglSelesai.toLocaleDateString('id-ID')}`;
                     } else if (match && isAktif && !isVerified){
                         // kondisi 2 : baru isi form, belum verifikasi
