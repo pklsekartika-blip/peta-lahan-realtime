@@ -69,34 +69,39 @@
 
     function getStyleById(feature, dataAtribut, waktuSekarang) {
         const idLahan = feature.properties.id; 
-        const namaLahan = feature.properties.Nama_Lahan;
-        const match = [...dataAtribut].reverse().find(item => {
-            // Pastikan sel Kode_Lahan di Sheets tidak kosong
-            if (item.Keterangan && item.Keterangan.toLowerCase() === "ditolak") return false;
+
+        // Cari semua entri yang cocok dengan lahan ini (bukan hanya satu)
+        const semuaMatch = dataAtribut.filter(item => {
             if (!item.Kode_Lahan) return false;
-    
-            // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
-            const listLahan = item.Kode_Lahan.toString().split(',').map(lahan => lahan.trim());
-    
-            // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
+            if (item.Keterangan && item.Keterangan.toLowerCase() === "ditolak") return false;
+            const listLahan = item.Kode_Lahan.toString().split(',').map(l => l.trim());
             return listLahan.includes(feature.properties.Nama_Lahan);
         });
-        
-        let terpakai = false;
 
-        // Pengecekan aman: pastikan match.status_Verifikasi ada isinya, lalu cek apakah isinya verified
-        let isVerified = false;
-        if (match && match.Keterangan) {
-            const ketText = match.Keterangan.toLowerCase(); // Ubah jadi huruf kecil semua
-            if (ketText === "terverisikasi" || ketText === "terverifikasi") { // Cek kedua kemungkinan
-                isVerified = true;
-            }
+        // Prioritas: cari yang terverifikasi & masih aktif dulu
+        let match = semuaMatch.find(item => {
+            const tglSelesai = buatObjekTanggal(item.Selesai_Penelitian);
+            if (!tglSelesai || tglSelesai <= waktuSekarang) return false;
+            const ket = item.Keterangan ? item.Keterangan.toLowerCase() : "";
+            return ket === "terverifikasi" || ket === "terverisikasi";
+        });
+
+        // Kalau tidak ada yang terverifikasi, cari yang pending & masih aktif
+        if (!match) {
+            match = semuaMatch.find(item => {
+                const tglSelesai = buatObjekTanggal(item.Selesai_Penelitian);
+                return tglSelesai && tglSelesai > waktuSekarang;
+            });
         }
-        
+
         let statusLahan = "Kosong";
-        if (match && match.Selesai_Penelitian) {
+        let isVerified = false;
+
+        if (match) {
             const tglSelesai = buatObjekTanggal(match.Selesai_Penelitian);
             if (tglSelesai && tglSelesai > waktuSekarang) {
+                const ket = match.Keterangan ? match.Keterangan.toLowerCase() : "";
+                isVerified = (ket === "terverifikasi" || ket === "terverisikasi");
                 statusLahan = isVerified ? "terpakai" : "menunggu";
             }
         }
@@ -106,23 +111,13 @@
         else if (idLahan === 4) warna = "#ffc0cb";
         else if (idLahan === 5) warna = "#0000ff";
         else {
-            // logika warna untuk id 1 dan 3
-            if (statusLahan === "terpakai") warna = "#ff4d4d"; // Merah
-            else if (statusLahan === "menunggu") warna = "#f39c12"; // oranye
-            else warna = "#2ecc71"; // hijau
+            if (statusLahan === "terpakai") warna = "#ff4d4d";
+            else if (statusLahan === "menunggu") warna = "#f39c12";
+            else warna = "#2ecc71";
         }
-       // switch (idLahan) {
-         //   case 0: warna = "#808080"; break;
-          //  case 1: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-          //  case 2: warna = "#ffff00"; break;
-          //  case 3: warna = terpakai ? "#ff4d4d" : "#2ecc71"; break;
-          //  case 4: warna = "#ffc0cb"; break;
-          //  case 5: warna = "#0000ff"; break;
-          //  default: warna = "#ffffff";
-       // }
+
         return { fillColor: warna, weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.7 };
-    }
-    
+    }    
     async function loadPeta() {
         try {
             const responseAttr = await fetch('https://script.google.com/macros/s/AKfycbxo8JbhcKeFxx_nvGoGNwtqiv9FAHt0rHS1-exD9iDFYGpftZ3m4QH0mmFdjWnC0CqgSQ/exec');
@@ -147,16 +142,32 @@
                         className: "label-lahan"
                     }).openTooltip();
                     
-                    const match = [...dataAtribut].reverse().find(item => {
+                    const semuaMatch = dataAtribut.filter(item => {
                         // Pastikan sel Kode_Lahan di Sheets tidak kosong
                         if (!item.Kode_Lahan) return false;
+                        if (item.Keterangan && item.Keterangan.toLowerCase() === "ditolak") return false;
     
                         // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
-                        const listLahan = item.Kode_Lahan.toString().split(',').map(lahan => lahan.trim());
+                        const listLahan = item.Kode_Lahan.toString().split(',').map(1 => 1.trim());
     
                         // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
                         return listLahan.includes(feature.properties.Nama_Lahan);
                     });
+
+                    // Prioritas: terverifikasi aktif dul, baru pending aktif
+                    let match = semuaMatch.find(item => {
+                        const tgl = buatObjekTanggal(item.Selesai_Penelitian);
+                        if (!tgl || tgl <= waktuSekarang) return false;
+                        const ket = item.Keterangan ? item.Keterangan.to.LowerCase() : "";
+                        return ket === "terverifikasi" || ket === "terverisikasi";
+                    });
+                    if (!match) {
+                        match = semuaMatch.find(item => {
+                            const tgl = buatObjekTanggal(item.Selesai_Penelitian);
+                            return tgl && tgl > waktuSekarang;
+                        });
+                    }
+                    
                     const tglSelesai = match ? buatObjekTanggal(match.Selesai_Penelitian) : null;
                     const isAktif = tglSelesai && tglSelesai > waktuSekarang;
 
