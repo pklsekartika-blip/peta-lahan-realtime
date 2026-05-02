@@ -148,7 +148,7 @@
                         if (item.Keterangan && item.Keterangan.toLowerCase() === "ditolak") return false;
     
                         // Pecah teks berdasarkan koma, lalu bersihkan spasi di kiri-kanannya
-                        const listLahan = item.Kode_Lahan.toString().split(',').map(1 => 1.trim());
+                        const listLahan = item.Kode_Lahan.toString().split(',').map(l => l.trim());
     
                         // Cek apakah nama lahan di peta ada di dalam daftar listLahan dari Sheets
                         return listLahan.includes(feature.properties.Nama_Lahan);
@@ -158,7 +158,7 @@
                     let match = semuaMatch.find(item => {
                         const tgl = buatObjekTanggal(item.Selesai_Penelitian);
                         if (!tgl || tgl <= waktuSekarang) return false;
-                        const ket = item.Keterangan ? item.Keterangan.to.LowerCase() : "";
+                        const ket = item.Keterangan ? item.Keterangan.toLowerCase() : "";
                         return ket === "terverifikasi" || ket === "terverisikasi";
                     });
                     if (!match) {
